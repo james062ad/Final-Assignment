@@ -1,0 +1,48 @@
+User Story: Policymaker Using Accident Risk Prediction
+Title:ÿEnhancing Road Safety with AI-Powered Risk Forecasting
+User Role:ÿPolicymaker (Traffic Safety Department, Local Government)
+Goal:
+As aÿpolicymaker, I want toÿidentify high-risk road segments based on accident dataÿso that I canÿprioritise safety interventions, allocate resources efficiently, and reduce road accidents.
+Scenario:
+* The policymaker logs into theÿAI-driven road safety platform.
+* They select aÿspecific region or road segmentÿwhere recent accidents have occurred.
+* The system retrievesÿhistorical accident data,ÿroad conditions, andÿtraffic patterns.
+* TheÿLogistic Regression and Random Forest modelsÿpredictÿaccident risk levelsÿ(Low, Medium, High).
+* Aÿheatmapÿvisually highlightsÿhigh-risk areasÿbased on accident probability.
+* The policymakerÿreviews the insightsÿand compares risk scores across multiple areas.
+* Based on the system?s recommendations, the policymakerÿimplements interventions, such as:
+o Reducing speed limits in high-risk zones
+o Installing additional street lighting
+o Increasing police patrols
+o Setting up traffic monitoring cameras
+* The system generatesÿa cost-benefit analysis, helping justify funding for proposed measures.
+* The policymakerÿsubmits the intervention planÿfor approval and tracks the impact over time.
+Acceptance Criteria:
+? The system providesÿaccurate accident risk classificationsÿ(Low, Medium, High).
+? The system generatesÿheatmapsÿto visualise accident-prone areas.
+? The policymaker canÿcompare risk scores across multiple regions.
+? The systemÿsuggests relevant safety measuresÿbased on accident risk levels.
+? The system providesÿeconomic cost estimatesÿfor different intervention strategies.
+? The policymaker canÿexport reportsÿfor decision-making meetings.
+
+
+
+
+Test Case: Policymaker Using Accident Risk Prediction
+Test Case ID:ÿARP_TC_001
+Test Title:ÿAccident Risk Prediction for Policy Decision-Making
+Tested By:ÿ[Your Name]
+Test Date:ÿ[DD/MM/YYYY]
+Preconditions:
+* The system is live and accessible.
+* The policymaker has login credentials and access to accident risk analysis.
+* Historical accident data is available for selected locations.
+
+Test Steps & Expected Outcomes
+Step No.Test ActionExpected OutcomePass/Fail1Policymaker logs into theÿAI-driven road safety platform.The system successfully authenticates the user and provides access to the dashboard.? / ?2Policymaker selects aÿspecific road segment, time period, and road attributesÿ(e.g., speed limit, traffic density).The system retrieves relevant historical accident data.? / ?3Policymaker clicks onÿ"Run Risk Prediction".The system runs theÿLogistic Regression and Random Forest modelsÿon the selected inputs.? / ?4The system displays theÿaccident risk levelÿ(Low, Medium, High) for the selected location.The risk level is classified correctly based on data-driven probability.? / ?5Policymaker clicks onÿ"View Heatmap"ÿto visualise accident-prone areas.The system generates aÿheatmapÿhighlighting high-risk locations.? / ?6Policymaker reviews suggestedÿsafety interventions(e.g., speed limit reduction, improved lighting).The system provides relevant recommendations based on accident risk levels.? / ?7Policymaker selects a recommended intervention and requests anÿeconomic cost analysis.The system calculates the cost of inaction vs. projected savings from intervention.? / ?8Policymakerÿdownloads/export reportsÿfor internal discussion.The system generates a downloadable report summarising accident risk, heatmaps, and recommendations.? / ?9Policymaker submits aÿsafety proposalÿbased on AI recommendations.The system stores the proposal and allows tracking of implemented measures.? / ?
+Postconditions:
+* The policymaker receivesÿactionable insightsÿon accident-prone areas.
+* The system providesÿdata-driven intervention recommendations.
+* Cost-benefit analysis helps justifyÿbudget allocations for road safety improvements.
+
+

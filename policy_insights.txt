@@ -1,0 +1,18 @@
+=== Road Safety Policy Insights ===
+
+Model Performance:
+- Can identify 29.8% of high-risk situations
+- Overall accuracy: 87.6%
+
+Top Risk Factors:
+1. junction_detail_0: 0.109
+2. speed_limit: 0.108
+3. road_type_6: 0.063
+4. light_conditions_4: 0.057
+5. junction_detail_3: 0.054
+
+Recommended Policy Actions:
+1. Time-based interventions at peak risk hours
+2. Focus on high-impact features for immediate risk reduction
+3. Weather-speed interaction safety guidelines
+4. Targeted measures for night-time high-speed zones
