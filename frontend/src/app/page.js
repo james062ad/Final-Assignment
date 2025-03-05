@@ -42,7 +42,7 @@ export default function Home() {
 
     try {
       console.log('Sending data:', formData);
-      const response = await axios.post('http://127.0.0.1:5000/api/predict', formData);
+      const response = await axios.post('https://accident-risk-prediction.onrender.com/predict', formData);
       console.log('API Response:', response.data);
       setPrediction(response.data.prediction);
     } catch (err) {
