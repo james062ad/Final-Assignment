@@ -3,6 +3,7 @@ import joblib
 import numpy as np
 import pandas as pd
 from sklearn.preprocessing import StandardScaler
+import os
 
 # Create blueprint for API routes
 api = Blueprint('api', __name__)
@@ -41,11 +42,21 @@ RISK_THRESHOLDS = {
     'high': 0.70    # Threshold for high risk classification
 }
 
+# Get the directory containing the current file
+current_dir = os.path.dirname(os.path.abspath(__file__))
+model_path = os.path.join(os.path.dirname(current_dir), 'models', 'best_model.joblib')
+
 # Load the model and scaler
 try:
-    model_artifacts = joblib.load('best_model.joblib')
+    if not os.path.exists(model_path):
+        raise FileNotFoundError(f"Model file not found at {model_path}")
+        
+    model_artifacts = joblib.load(model_path)
+    if not isinstance(model_artifacts, dict) or 'model' not in model_artifacts:
+        raise ValueError("Invalid model file format")
+        
     model = model_artifacts['model']
-    feature_names = model_artifacts['feature_names']
+    feature_names = model_artifacts.get('feature_names', [])
     print("Model loaded successfully")
     print(f"Feature names: {feature_names}")
     # Initialize a new scaler for each prediction
@@ -53,7 +64,7 @@ try:
 except Exception as e:
     print(f"Error loading model: {str(e)}")
     model = None
-    feature_names = None
+    feature_names = []
     scaler = None
 
 def validate_input(data):
@@ -227,7 +238,7 @@ def predict():
     Returns prediction and probability
     """
     if model is None:
-        return jsonify({"error": "Model not loaded"}), 500
+        return jsonify({"error": "Model not loaded. Please try again later."}), 500
 
     try:
         # Get data from request
@@ -235,7 +246,7 @@ def predict():
 
         # Validate input data
         if not data:
-            return jsonify({"error": "No input data provided"}), 400
+            return jsonify({"error": "No data provided"}), 400
         
         validation_errors = validate_input(data)
         if validation_errors:
@@ -293,4 +304,4 @@ def predict():
 
     except Exception as e:
         print(f"Prediction error: {str(e)}")
-        return jsonify({"error": str(e)}), 500 
+        return jsonify({"error": "Failed to process prediction"}), 500 

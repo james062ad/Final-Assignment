@@ -1,25 +1,26 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import axios from 'axios';
 
 const getRiskBreakdown = (prediction) => {
-  if (!prediction || !prediction.risk_factors) return {};
-  const factors = {
-    road: prediction.risk_factors.some(f => f.includes('road') || f.includes('Urban')) ? 1 : 0,
-    weather: prediction.risk_factors.some(f => f.includes('weather') || f.includes('Rain') || f.includes('Snow') || f.includes('Fog')) ? 1 : 0,
-    speed: prediction.risk_factors.some(f => f.includes('speed')) ? 1 : 0,
-    visibility: prediction.risk_factors.some(f => f.includes('visibility') || f.includes('Night')) ? 1 : 0,
-    junction: prediction.risk_factors.some(f => f.includes('junction')) ? 1 : 0
-  };
+  if (!prediction?.probabilities) return {};
   
-  return factors;
+  const { high_risk = "0%", medium_risk = "0%", low_risk = "0%" } = prediction.probabilities;
+  const highRiskProb = parseFloat(high_risk.replace('%', '')) || 0;
+  const mediumRiskProb = parseFloat(medium_risk.replace('%', '')) || 0;
+  
+  return {
+    road: highRiskProb > 30 || mediumRiskProb > 60 ? 1 : 0,
+    weather: highRiskProb > 20 || mediumRiskProb > 50 ? 1 : 0,
+    speed: highRiskProb > 25 || mediumRiskProb > 55 ? 1 : 0,
+    visibility: highRiskProb > 15 || mediumRiskProb > 45 ? 1 : 0,
+    junction: highRiskProb > 10 || mediumRiskProb > 40 ? 1 : 0
+  };
 };
 
 const getFactorSeverity = (confidence) => {
   if (!confidence) return 'Low';
-  const conf = parseFloat(confidence);
-  if (isNaN(conf)) return 'Low';
+  const conf = parseFloat(confidence.replace('%', '')) || 0;
   if (conf >= 70) return 'High';
   if (conf >= 40) return 'Medium';
   return 'Low';
@@ -66,43 +67,63 @@ export default function Home() {
     };
 
     try {
-      console.log('Sending data:', formattedData);
-      const response = await axios.post('https://accident-risk-prediction.onrender.com/predict', formattedData, {
+      console.log('Sending data:', JSON.stringify(formattedData, null, 2));
+      
+      const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://accident-risk-prediction.onrender.com';
+      const response = await fetch(`${API_URL}/predict`, {
+        method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Accept': 'application/json'
         },
-        timeout: 10000
+        body: JSON.stringify(formattedData),
+        mode: 'cors',
+        cache: 'no-store'
       });
-      
-      console.log('Raw API Response:', response);
-      console.log('API Response Data:', response.data);
-      
-      if (!response.data) {
-        throw new Error('No data received from the server');
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('Error response:', errorText);
+        throw new Error(`Server error: ${response.status}. Please try again later.`);
       }
 
-      if (!response.data.risk_level || !response.data.confidence || !response.data.risk_factors) {
-        console.error('Invalid response structure:', response.data);
-        throw new Error('Invalid response from server');
+      let data;
+      try {
+        const text = await response.text();
+        console.log('Raw response:', text);
+        data = JSON.parse(text);
+        
+        if (!data || typeof data !== 'object') {
+          throw new Error('Invalid response format');
+        }
+
+        // Create prediction object with the exact structure we received
+        const result = {
+          risk_level: data.risk_level || 'Unknown',
+          confidence: data.confidence || '0%',
+          probabilities: {
+            high_risk: data.probabilities?.high_risk || '0%',
+            medium_risk: data.probabilities?.medium_risk || '0%',
+            low_risk: data.probabilities?.low_risk || '0%'
+          }
+        };
+
+        console.log('Processed result:', result);
+        setPrediction(result);
+      } catch (parseError) {
+        console.error('Parse error:', parseError);
+        throw new Error('Unable to process server response. Please try again.');
       }
-      
-      setPrediction(response.data);
+
     } catch (err) {
-      console.error('API Error Details:', {
+      console.error('Full error details:', {
+        name: err.name,
         message: err.message,
+        stack: err.stack,
         response: err.response,
-        request: err.request,
-        config: err.config
+        request: err.request
       });
-
-      setError(
-        err.response?.data?.details 
-          ? `Validation error: ${JSON.stringify(err.response.data.details)}`
-          : err.response?.data?.error 
-          ? err.response.data.error
-          : err.message || 'An error occurred while making the prediction. Please try again.'
-      );
+      setError(`Failed to get prediction: ${err.message}`);
     } finally {
       setLoading(false);
     }
@@ -118,16 +139,17 @@ export default function Home() {
     }));
   };
 
-  const getRiskColor = (probability) => {
-    const prob = parseFloat(probability);
-    if (prob >= 70) return 'red';
-    if (prob >= 40) return 'orange';
+  const getRiskColor = (confidence) => {
+    if (!confidence) return 'green';
+    const conf = parseFloat(confidence.replace('%', '')) || 0;
+    if (conf >= 70) return 'red';
+    if (conf >= 40) return 'orange';
     return 'green';
   };
 
   const renderRiskMeter = (confidence) => {
     if (!confidence) return null;
-    const conf = parseFloat(confidence);
+    const conf = parseFloat(confidence.replace('%', '')) || 0;
     if (isNaN(conf)) return null;
     
     return (
@@ -170,8 +192,10 @@ export default function Home() {
   };
 
   const renderRiskBreakdown = (prediction) => {
+    if (!prediction) return null;
     const factors = getRiskBreakdown(prediction);
-    const severity = getFactorSeverity(prediction.confidence?.replace('%', ''));
+    const confidence = prediction.confidence?.replace('%', '');
+    const severity = getFactorSeverity(confidence);
     
     return (
       <div className="grid grid-cols-5 gap-2 print:gap-4">
@@ -197,7 +221,7 @@ export default function Home() {
 
   const renderTrendIndicator = (confidence) => {
     if (!confidence) return null;
-    const conf = parseFloat(confidence);
+    const conf = parseFloat(confidence.replace('%', '')) || 0;
     if (isNaN(conf)) return null;
     const angle = (conf / 100) * 180 - 90;
     
@@ -412,8 +436,8 @@ export default function Home() {
                       <div className="flex items-center justify-between mb-4">
                         <span className="font-medium text-lg">Risk Level:</span>
                         <span className={`px-4 py-2 rounded-full text-sm font-semibold ${
-                          prediction.risk_level === 'High Risk' ? 'bg-red-100 text-red-800' :
-                          prediction.risk_level === 'Medium Risk' ? 'bg-yellow-100 text-yellow-800' :
+                          prediction.risk_level === 'High' ? 'bg-red-100 text-red-800' :
+                          prediction.risk_level === 'Medium' ? 'bg-yellow-100 text-yellow-800' :
                           'bg-green-100 text-green-800'
                         }`}>
                           {prediction.risk_level || 'Unknown'}
