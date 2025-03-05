@@ -1,9 +1,10 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import axios from 'axios';
 
 const getRiskBreakdown = (prediction) => {
+  if (!prediction || !prediction.risk_factors) return {};
   const factors = {
     road: prediction.risk_factors.some(f => f.includes('road') || f.includes('Urban')) ? 1 : 0,
     weather: prediction.risk_factors.some(f => f.includes('weather') || f.includes('Rain') || f.includes('Snow') || f.includes('Fog')) ? 1 : 0,
@@ -15,17 +16,20 @@ const getRiskBreakdown = (prediction) => {
   return factors;
 };
 
-const getFactorSeverity = (probability) => {
-  const prob = parseFloat(probability);
-  if (prob >= 70) return 'High';
-  if (prob >= 40) return 'Medium';
+const getFactorSeverity = (confidence) => {
+  if (!confidence) return 'Low';
+  const conf = parseFloat(confidence);
+  if (isNaN(conf)) return 'Low';
+  if (conf >= 70) return 'High';
+  if (conf >= 40) return 'Medium';
   return 'Low';
 };
 
 export default function Home() {
+  const [mounted, setMounted] = useState(false);
   const [formData, setFormData] = useState({
     Region: 'London',
-    'Road Type': 'Single carriageway',
+    'Road Type': 'Urban Expressway',
     'Weather Condition': 'Fine',
     'Speed Limit': 20,
     'Time of Day': 'Afternoon',
@@ -36,24 +40,68 @@ export default function Home() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
+  useEffect(() => {
+    setMounted(true);
+    window.onerror = function(message, source, lineno, colno, error) {
+      console.error('Global error:', { message, source, lineno, colno, error });
+      setError('An unexpected error occurred. Please try refreshing the page.');
+      return false;
+    };
+  }, []);
+
+  if (!mounted) {
+    return null;
+  }
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
     setError(null);
+    setPrediction(null);
+
+    const formattedData = {
+      ...formData,
+      'Speed Limit': parseInt(formData['Speed Limit'], 10),
+      'Number of Vehicles': parseInt(formData['Number of Vehicles'], 10)
+    };
 
     try {
-      console.log('Sending data:', formData);
-      const response = await axios.post('https://accident-risk-prediction.onrender.com/predict', formData);
-      console.log('API Response:', response.data);
+      console.log('Sending data:', formattedData);
+      const response = await axios.post('https://accident-risk-prediction.onrender.com/predict', formattedData, {
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
+        timeout: 10000
+      });
+      
+      console.log('Raw API Response:', response);
+      console.log('API Response Data:', response.data);
+      
+      if (!response.data) {
+        throw new Error('No data received from the server');
+      }
+
+      if (!response.data.risk_level || !response.data.confidence || !response.data.risk_factors) {
+        console.error('Invalid response structure:', response.data);
+        throw new Error('Invalid response from server');
+      }
+      
       setPrediction(response.data);
     } catch (err) {
-      console.error('API Error:', err);
+      console.error('API Error Details:', {
+        message: err.message,
+        response: err.response,
+        request: err.request,
+        config: err.config
+      });
+
       setError(
         err.response?.data?.details 
           ? `Validation error: ${JSON.stringify(err.response.data.details)}`
           : err.response?.data?.error 
           ? err.response.data.error
-          : 'An error occurred while making the prediction. Please try again.'
+          : err.message || 'An error occurred while making the prediction. Please try again.'
       );
     } finally {
       setLoading(false);
@@ -77,17 +125,20 @@ export default function Home() {
     return 'green';
   };
 
-  const renderRiskMeter = (probability) => {
-    const prob = parseFloat(probability);
+  const renderRiskMeter = (confidence) => {
+    if (!confidence) return null;
+    const conf = parseFloat(confidence);
+    if (isNaN(conf)) return null;
+    
     return (
       <div className="w-full h-4 bg-gray-200 rounded-full overflow-hidden">
         <div 
           className={`h-full transition-all duration-500 ${
-            prob >= 70 ? 'bg-red-500' :
-            prob >= 40 ? 'bg-orange-500' :
+            conf >= 70 ? 'bg-red-500' :
+            conf >= 40 ? 'bg-orange-500' :
             'bg-green-500'
           }`}
-          style={{ width: `${prob}%` }}
+          style={{ width: `${conf}%` }}
         />
       </div>
     );
@@ -120,7 +171,7 @@ export default function Home() {
 
   const renderRiskBreakdown = (prediction) => {
     const factors = getRiskBreakdown(prediction);
-    const severity = getFactorSeverity(prediction.probability);
+    const severity = getFactorSeverity(prediction.confidence?.replace('%', ''));
     
     return (
       <div className="grid grid-cols-5 gap-2 print:gap-4">
@@ -144,9 +195,11 @@ export default function Home() {
     );
   };
 
-  const renderTrendIndicator = (probability) => {
-    const prob = parseFloat(probability);
-    const angle = (prob / 100) * 180 - 90;
+  const renderTrendIndicator = (confidence) => {
+    if (!confidence) return null;
+    const conf = parseFloat(confidence);
+    if (isNaN(conf)) return null;
+    const angle = (conf / 100) * 180 - 90;
     
     return (
       <div className="relative h-32 w-32 mx-auto print:hidden">
@@ -164,7 +217,7 @@ export default function Home() {
             />
           </div>
           <div className="absolute bottom-0 w-full text-center text-sm font-medium text-gray-600">
-            {probability}
+            {confidence}
           </div>
         </div>
         <div className="absolute top-0 left-0 w-full text-center text-xs text-gray-500">High</div>
@@ -197,10 +250,11 @@ export default function Home() {
                     onChange={handleInputChange}
                     className="block w-full px-4 py-3 rounded-lg border-gray-200 focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50 bg-white shadow-sm transition-colors duration-200 ease-in-out"
                   >
-                    <option value="Single carriageway">Single carriageway</option>
-                    <option value="Dual carriageway">Dual carriageway</option>
-                    <option value="Roundabout">Roundabout</option>
-                    <option value="One way street">One way street</option>
+                    <option value="Urban Expressway">Urban Expressway</option>
+                    <option value="Urban Road">Urban Road</option>
+                    <option value="Rural Road">Rural Road</option>
+                    <option value="Highway">Highway</option>
+                    <option value="Motorway">Motorway</option>
                   </select>
                   <div className="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none">
                     <svg className="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -365,10 +419,10 @@ export default function Home() {
                           {prediction.risk_level || 'Unknown'}
                         </span>
                       </div>
-                      {renderRiskMeter(prediction.probability.replace('%', ''))}
+                      {renderRiskMeter(prediction.confidence?.replace('%', ''))}
                     </div>
                     <div>
-                      {renderTrendIndicator(prediction.probability.replace('%', ''))}
+                      {renderTrendIndicator(prediction.confidence?.replace('%', ''))}
                     </div>
                   </div>
                 </div>
