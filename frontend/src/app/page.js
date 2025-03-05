@@ -24,11 +24,12 @@ const getFactorSeverity = (probability) => {
 
 export default function Home() {
   const [formData, setFormData] = useState({
-    road_type: 1,
-    weather_conditions: 'Fine',
-    speed_limit: 20,
-    time_of_day: 'Afternoon',
-    junction_detail: 'Not at junction'
+    Region: 'London',
+    'Road Type': 'Single carriageway',
+    'Weather Condition': 'Fine',
+    'Speed Limit': 20,
+    'Time of Day': 'Afternoon',
+    'Number of Vehicles': 1
   });
 
   const [prediction, setPrediction] = useState(null);
@@ -44,7 +45,7 @@ export default function Home() {
       console.log('Sending data:', formData);
       const response = await axios.post('https://accident-risk-prediction.onrender.com/predict', formData);
       console.log('API Response:', response.data);
-      setPrediction(response.data.prediction);
+      setPrediction(response.data);
     } catch (err) {
       console.error('API Error:', err);
       setError(
@@ -63,7 +64,7 @@ export default function Home() {
     const { name, value } = e.target;
     setFormData(prev => ({
       ...prev,
-      [name]: name === 'road_type' || name === 'speed_limit' ? parseInt(value, 10) : value
+      [name]: name === 'Road Type' || name === 'Speed Limit' ? parseInt(value, 10) : value
     }));
   };
 
@@ -189,15 +190,15 @@ export default function Home() {
                 <label className="block text-sm font-semibold text-gray-700 mb-1">Road Type</label>
                 <div className="relative">
                   <select
-                    name="road_type"
-                    value={formData.road_type}
+                    name="Road Type"
+                    value={formData['Road Type']}
                     onChange={handleInputChange}
                     className="block w-full px-4 py-3 rounded-lg border-gray-200 focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50 bg-white shadow-sm transition-colors duration-200 ease-in-out"
                   >
-                    <option value="1">Residential</option>
-                    <option value="2">A Road</option>
-                    <option value="3">B Road</option>
-                    <option value="6">Urban</option>
+                    <option value="Single carriageway">Single carriageway</option>
+                    <option value="Dual carriageway">Dual carriageway</option>
+                    <option value="Roundabout">Roundabout</option>
+                    <option value="One way street">One way street</option>
                   </select>
                   <div className="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none">
                     <svg className="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -212,8 +213,8 @@ export default function Home() {
                 <label className="block text-sm font-semibold text-gray-700 mb-1">Weather Conditions</label>
                 <div className="relative">
                   <select
-                    name="weather_conditions"
-                    value={formData.weather_conditions}
+                    name="Weather Condition"
+                    value={formData['Weather Condition']}
                     onChange={handleInputChange}
                     className="block w-full px-4 py-3 rounded-lg border-gray-200 focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50 bg-white shadow-sm transition-colors duration-200 ease-in-out"
                   >
@@ -235,17 +236,17 @@ export default function Home() {
                 <label className="block text-sm font-semibold text-gray-700 mb-1">Speed Limit</label>
                 <div className="relative">
                   <select
-                    name="speed_limit"
-                    value={formData.speed_limit}
+                    name="Speed Limit"
+                    value={formData['Speed Limit']}
                     onChange={handleInputChange}
                     className="block w-full px-4 py-3 rounded-lg border-gray-200 focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50 bg-white shadow-sm transition-colors duration-200 ease-in-out"
                   >
-                    <option value="20">20 mph</option>
-                    <option value="30">30 mph</option>
-                    <option value="40">40 mph</option>
-                    <option value="50">50 mph</option>
-                    <option value="60">60 mph</option>
-                    <option value="70">70 mph</option>
+                    <option value={20}>20 mph</option>
+                    <option value={30}>30 mph</option>
+                    <option value={40}>40 mph</option>
+                    <option value={50}>50 mph</option>
+                    <option value={60}>60 mph</option>
+                    <option value={70}>70 mph</option>
                   </select>
                   <div className="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none">
                     <svg className="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -260,8 +261,8 @@ export default function Home() {
                 <label className="block text-sm font-semibold text-gray-700 mb-1">Time of Day</label>
                 <div className="relative">
                   <select
-                    name="time_of_day"
-                    value={formData.time_of_day}
+                    name="Time of Day"
+                    value={formData['Time of Day']}
                     onChange={handleInputChange}
                     className="block w-full px-4 py-3 rounded-lg border-gray-200 focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50 bg-white shadow-sm transition-colors duration-200 ease-in-out"
                   >
@@ -278,26 +279,17 @@ export default function Home() {
                 </div>
               </div>
 
-              {/* Junction Detail */}
+              {/* Number of Vehicles */}
               <div className="space-y-2">
-                <label className="block text-sm font-semibold text-gray-700 mb-1">Junction Detail</label>
+                <label className="block text-sm font-semibold text-gray-700 mb-1">Number of Vehicles</label>
                 <div className="relative">
-                  <select
-                    name="junction_detail"
-                    value={formData.junction_detail}
+                  <input
+                    type="number"
+                    name="Number of Vehicles"
+                    value={formData['Number of Vehicles']}
                     onChange={handleInputChange}
                     className="block w-full px-4 py-3 rounded-lg border-gray-200 focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50 bg-white shadow-sm transition-colors duration-200 ease-in-out"
-                  >
-                    <option value="Not at junction">Not at junction</option>
-                    <option value="T Junction">T Junction</option>
-                    <option value="Crossroads">Crossroads</option>
-                    <option value="Roundabout">Roundabout</option>
-                  </select>
-                  <div className="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none">
-                    <svg className="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
-                    </svg>
-                  </div>
+                  />
                 </div>
               </div>
             </div>
