@@ -264,6 +264,36 @@ export default function Home() {
         <div className="bg-white rounded-xl shadow-lg p-8 print:shadow-none">
           <form onSubmit={handleSubmit} className="space-y-8">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+              {/* Region */}
+              <div className="space-y-2">
+                <label className="block text-sm font-semibold text-gray-700 mb-1">Region</label>
+                <div className="relative">
+                  <select
+                    name="Region"
+                    value={formData['Region']}
+                    onChange={handleInputChange}
+                    className="block w-full px-4 py-3 rounded-lg border-gray-200 focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50 bg-white shadow-sm transition-colors duration-200 ease-in-out"
+                  >
+                    <option value="London">London</option>
+                    <option value="South East">South East</option>
+                    <option value="North West">North West</option>
+                    <option value="Yorkshire">Yorkshire</option>
+                    <option value="West Midlands">West Midlands</option>
+                    <option value="East Midlands">East Midlands</option>
+                    <option value="South West">South West</option>
+                    <option value="East of England">East of England</option>
+                    <option value="North East">North East</option>
+                    <option value="Wales">Wales</option>
+                    <option value="Scotland">Scotland</option>
+                  </select>
+                  <div className="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none">
+                    <svg className="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </div>
+                </div>
+              </div>
+
               {/* Road Type */}
               <div className="space-y-2">
                 <label className="block text-sm font-semibold text-gray-700 mb-1">Road Type</label>
