@@ -64,7 +64,9 @@ export default function Home() {
     const { name, value } = e.target;
     setFormData(prev => ({
       ...prev,
-      [name]: name === 'Road Type' || name === 'Speed Limit' ? parseInt(value, 10) : value
+      [name]: name === 'Speed Limit' || name === 'Number of Vehicles' 
+        ? parseInt(value, 10) 
+        : value
     }));
   };
 
