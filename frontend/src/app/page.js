@@ -69,22 +69,23 @@ export default function Home() {
     try {
       console.log('Sending data:', JSON.stringify(formattedData, null, 2));
       
-      const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://accident-risk-prediction.onrender.com';
-      const response = await fetch(`${API_URL}/predict`, {
+      // Use our local API route instead of calling the backend directly
+      console.log('Using local API route to handle the request');
+      
+      let response = await fetch(`/api/predict`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Accept': 'application/json'
         },
         body: JSON.stringify(formattedData),
-        mode: 'cors',
         cache: 'no-store'
       });
 
       if (!response.ok) {
         const errorText = await response.text();
         console.error('Error response:', errorText);
-        throw new Error(`Server error: ${response.status}. Please try again later.`);
+        throw new Error(`Server error: ${response.status}. ${errorText}`);
       }
 
       let data;
