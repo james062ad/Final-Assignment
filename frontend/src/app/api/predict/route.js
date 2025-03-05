@@ -3,13 +3,16 @@ export async function POST(request) {
     const data = await request.json();
     console.log('Proxy received data:', data);
     
-    const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://road-safety-app.onrender.com';
+    const API_URL = 'https://road-safety-app.onrender.com';
+    
+    console.log('Sending request to:', `${API_URL}/predict`);
     
     const response = await fetch(`${API_URL}/predict`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Accept': 'application/json'
+        'Accept': 'application/json',
+        'Origin': 'https://road-safety-app.vercel.app'
       },
       body: JSON.stringify(data),
       cache: 'no-store'
